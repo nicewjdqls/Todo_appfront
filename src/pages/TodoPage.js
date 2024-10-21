@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // 추가
 import TodoBoard from "../components/TodoBoard";
 import api from "../utils/api";
 import Row from "react-bootstrap/Row";
@@ -8,14 +9,23 @@ import Container from "react-bootstrap/Container";
 const TodoPage = () => {
   const [todoList, setTodoList] = useState([]);
   const [todoValue, setTodoValue] = useState("");
+  const navigate = useNavigate(); // 추가
 
   const getTasks = async () => {
     const response = await api.get("/tasks");
     setTodoList(response.data.data);
   };
+
   useEffect(() => {
-    getTasks();
-  }, []);
+    // 로그인 상태 확인
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      navigate("/login"); // 로그인되어 있지 않으면 로그인 페이지로 리다이렉션
+    } else {
+      getTasks();
+    }
+  }, [navigate]);
+
   const addTodo = async () => {
     try {
       const response = await api.post("/tasks", {
@@ -33,7 +43,6 @@ const TodoPage = () => {
 
   const deleteItem = async (id) => {
     try {
-      console.log(id);
       const response = await api.delete(`/tasks/${id}`);
       if (response.status === 200) {
         getTasks();
@@ -56,6 +65,7 @@ const TodoPage = () => {
       console.log("error", error);
     }
   };
+
   return (
     <Container>
       <Row className="add-item-row">
